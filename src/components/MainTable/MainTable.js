@@ -61,23 +61,30 @@ const MainTable = () => {
 
     const calculateCnGroups = () => {
         const groups = {};
-        const prices = {};
+    
         rows.forEach(row => {
-            const cnGroup = row.cnCode.substring(0, 4);
+            // Convert to string and then extract first 4 characters
+            const cnCode = String(row.cnCode);
+            const cnGroup = cnCode.substring(0, 4);
+            const indexValue = parseFloat(row.price || 0) * parseFloat(row.quantity || 0);
+    
             if (!groups[cnGroup]) {
-                groups[cnGroup] = 0;
-                prices[cnGroup] = 0;
+                groups[cnGroup] = {
+                    quantity: parseFloat(row.quantity || 0),
+                    indexValue: indexValue
+                };
+            } else {
+                groups[cnGroup].quantity += parseFloat(row.quantity || 0);
+                groups[cnGroup].indexValue += indexValue;
             }
-            groups[cnGroup] += parseInt(row.quantity, 10);
-            prices[cnGroup] += parseFloat(row.price || 0);
         });
-        setCnGroups(groups);
-        setPriceSummary(prices);
+    
+        return groups;
     };
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        calculateCnGroups();
+        const calculatedGroups = calculateCnGroups();
+        setCnGroups(calculatedGroups);
     };
 
     const addRow = () => {
@@ -105,10 +112,9 @@ const MainTable = () => {
         });
         setRows(updatedRows);
     };
-
     const calculateIndexValuesGB = () => {
         const updatedRows = rows.map(row => {
-            const indexValueGB = parseFloat(row.priceGB) * parseInt(row.quantity || 0, 10);
+            const indexValueGB = parseFloat(row.quantity || 0) * parseFloat(row.priceGB || 0);
             return { ...row, indexValueGB };
         });
         setRows(updatedRows);
@@ -143,18 +149,18 @@ const MainTable = () => {
                         </tr>
                     </thead>
                     <tbody>
-                    {rows.map((row, index) => (
-    <tr key={row.id}>
-        <td>{index + 1}</td>
-        <td><input type="text" value={row.indexName} onChange={(e) => handleInputChange(e, index, 'indexName')} /></td>
-        <td><input type="number" value={row.quantity} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
-        <td><input type="number" value={row.price} onChange={(e) => handleInputChange(e, index, 'price')} /></td>
-        <td>{typeof row.indexValue === 'number' ? row.indexValue.toFixed(2) : 'N/A'}</td>
-        <td>{typeof row.priceGB === 'number' ? row.priceGB.toFixed(2) : 'N/A'}</td>
-        <td>{typeof row.indexValueGB === 'number' ? row.indexValueGB.toFixed(2) : 'N/A'}</td>
-        <td><input type="text" value={row.cnCode} onChange={(e) => handleInputChange(e, index, 'cnCode')} /></td>
-    </tr>
-))}
+                        {rows.map((row, index) => (
+                            <tr key={row.id}>
+                                <td>{index + 1}</td>
+                                <td><input type="text" value={row.indexName} onChange={(e) => handleInputChange(e, index, 'indexName')} /></td>
+                                <td><input type="number" value={row.quantity} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
+                                <td><input type="number" value={row.price} onChange={(e) => handleInputChange(e, index, 'price')} /></td>
+                                <td>{typeof row.indexValue === 'number' ? row.indexValue.toFixed(2) : 'N/A'}</td>
+                                <td>{typeof row.priceGB === 'number' ? row.priceGB.toFixed(2) : 'N/A'}</td>
+                                <td>{typeof row.indexValueGB === 'number' ? row.indexValueGB.toFixed(2) : 'N/A'}</td>
+                                <td><input type="number" value={row.cnCode} onChange={(e) => handleInputChange(e, index, 'cnCode')} /></td>
+                            </tr>
+                        ))}
                     </tbody>
                 </Table>
                 <Button className='mx-3 my-2' variant="dark" type="button" onClick={addRow}>Add Row</Button>
@@ -174,18 +180,30 @@ const MainTable = () => {
                 </div>
             </div>
             <div>
-                <h4>CN Groups Quantity</h4>
-                <ul>
-                    {Object.entries(cnGroups).map(([group, quantity]) => (
-                        <li key={group}>CN Group {group}: Quantity {quantity}</li>
-                    ))}
-                </ul>
-                <h4>CN Groups Price Summary</h4>
-                <ul>
-                    {Object.entries(priceSummary).map(([group, price]) => (
-                        <li key={group}>CN Group {group}: Price {price.toFixed(2)}</li>
-                    ))}
-                </ul>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div>
+                        <h4>CN Groups Quantity</h4>
+                        <ul>
+                            {Object.entries(cnGroups).map(([group, { quantity }]) => {
+                                if (group && quantity > 0) {
+                                    return <li key={group}>CN Group {group}: Quantity {quantity}</li>;
+                                }
+                                return null; // Skip rendering empty groups
+                            })}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>CN Groups Value Summary</h4>
+                        <ul>
+                            {Object.entries(cnGroups).map(([group, { indexValue }]) => {
+                                if (group && indexValue > 0) {
+                                    return <li key={group}>CN Group {group}: Value {indexValue.toFixed(2)}</li>;
+                                }
+                                return null; // Skip rendering empty groups
+                            })}
+                        </ul>
+                    </div>
+                </div>
             </div>
         </Container>
     );
