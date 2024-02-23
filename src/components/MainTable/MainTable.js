@@ -4,7 +4,16 @@ import './MainTable.css';
 
 
 const MainTable = () => {
-  const [rows, setRows] = useState(Array.from({ length: 20 }, (_, index) => ({ id: index + 1, indexName: '', quantity: 0, price: 0, cnCode: '' })));
+    const [rows, setRows] = useState(() => {
+        const savedRows = localStorage.getItem('rows');
+        return savedRows ? JSON.parse(savedRows) : Array.from({ length: 20 }, (_, index) => ({
+          id: index + 1,
+          indexName: '',
+          quantity: '', // Initialize with an empty string
+          price: '', // Initialize with an empty string
+          cnCode: ''
+        }));
+      });
   const [cnGroups, setCnGroups] = useState({});
   const [priceSummary, setPriceSummary] = useState({});
   const [exchangeRate, setExchangeRate] = useState(0);
@@ -17,10 +26,19 @@ const MainTable = () => {
     }
   }, [conversionDate]);
 
+  useEffect(() => {
+    localStorage.setItem('rows', JSON.stringify(rows));
+  }, [rows]);
+
   const handleInputChange = (e, rowIndex, field) => {
     const { value } = e.target;
-    setRows(prevRows => prevRows.map((row, index) => index === rowIndex ? { ...row, [field]: value } : row));
-  };
+    const parsedValue = field !== 'indexName' ? parseFloat(value) : value; // Parse the input value to a float number if it's not the 'indexName' field
+    setRows(prevRows =>
+      prevRows.map((row, index) =>
+        index === rowIndex ? { ...row, [field]: parsedValue } : row
+      )
+    );
+};
 
   const fetchExchangeRate = async () => {
     try {
@@ -78,6 +96,10 @@ const MainTable = () => {
     }
   };
 
+  const totalPrice = rows.reduce((total, row) => total + parseFloat(row.price || 0), 0);
+  const totalPriceGB = rows.reduce((total, row) => total + parseFloat(row.priceGB || 0), 0);
+  const totalQuantity = rows.reduce((total, row) => total + parseInt(row.quantity, 10), 0);
+
   return (
     <Container>
       <form onSubmit={handleSubmit}>
@@ -97,8 +119,8 @@ const MainTable = () => {
               <tr key={row.id}>
                 <td>{index + 1}</td>
                 <td><input type="text" value={row.indexName} onChange={(e) => handleInputChange(e, index, 'indexName')} /></td>
-                <td><input type="number" value={row.quantity} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
-                <td><input type="number" value={row.price} onChange={(e) => handleInputChange(e, index, 'price')} /></td>
+                <td><input type="text" value={row.quantity} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
+                <td><input type="text" value={row.price} onChange={(e) => handleInputChange(e, index, 'price')} /></td>
                 <td>{row.priceGB ? row.priceGB.toFixed(2) : 'N/A'}</td>
                 <td><input type="text" value={row.cnCode} onChange={(e) => handleInputChange(e, index, 'cnCode')} /></td>
               </tr>
@@ -111,6 +133,14 @@ const MainTable = () => {
         <input type="date" value={conversionDate} onChange={handleDateChange} />
         <p>{exchangeRateDisplay}</p>
       </form>
+      <div>
+      <div>
+        <h4>Total Summary</h4>
+        <p>Total Price: {totalPrice.toFixed(2)}</p>
+        <p>Total Price GB: {totalPriceGB.toFixed(2)}</p>
+        <p>Total Quantity: {totalQuantity}</p>
+      </div>
+      </div>
       <div>
         <h4>CN Groups Quantity</h4>
         <ul>
