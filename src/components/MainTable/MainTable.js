@@ -48,7 +48,7 @@ const MainTable = () => {
 
     const fetchExchangeRate = async () => {
         try {
-            const response = await fetch(`http://api.nbp.pl/api/exchangerates/rates/a/gbp/${conversionDate}`);
+            const response = await fetch(`https://cors-anywhere.herokuapp.com/http://api.nbp.pl/api/exchangerates/rates/a/gbp/${conversionDate}`);
             const data = await response.json();
             if (data && data.rates && data.rates.length > 0) {
                 const rate = data.rates[0].mid;
