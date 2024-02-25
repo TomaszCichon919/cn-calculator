@@ -61,26 +61,31 @@ const MainTable = () => {
 
     const calculateCnGroups = () => {
         const groups = {};
-    
+
         rows.forEach(row => {
             // Convert to string and then extract first 4 characters
             const cnCode = String(row.cnCode);
             const cnGroup = cnCode.substring(0, 4);
-            const indexValue = parseFloat(row.price || 0) * parseFloat(row.quantity || 0);
-    
+            const indexValue = parseFloat(row.indexValue || 0); // Use indexValue instead of recalculating from price and quantity
+            const indexValueGB = parseFloat(row.indexValueGB || 0); // Use indexValueGB directly
+
             if (!groups[cnGroup]) {
                 groups[cnGroup] = {
                     quantity: parseFloat(row.quantity || 0),
-                    indexValue: indexValue
+                    indexValue: indexValue,
+                    indexValueGB: indexValueGB
                 };
             } else {
                 groups[cnGroup].quantity += parseFloat(row.quantity || 0);
                 groups[cnGroup].indexValue += indexValue;
+                groups[cnGroup].indexValueGB += indexValueGB;
             }
         });
-    
+
         return groups;
     };
+
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const calculatedGroups = calculateCnGroups();
@@ -132,6 +137,39 @@ const MainTable = () => {
     const totalPriceGB = rows.reduce((total, row) => total + parseFloat(row.priceGB || 0), 0);
     const totalQuantity = rows.reduce((total, row) => total + (parseInt(row.quantity, 10) || 0), 0);
 
+    const handleSaveData = () => {
+        const dataToSave = {
+            rows,
+            conversionDate,
+            exchangeRate
+        };
+        const jsonData = JSON.stringify(dataToSave);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tableData.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const data = JSON.parse(event.target.result);
+            setRows(data.rows || []);
+            setConversionDate(data.conversionDate || '');
+            setExchangeRate(data.exchangeRate || 0);
+        };
+        reader.readAsText(file);
+    };
+
+
     return (
         <Container>
             <form onSubmit={handleSubmit}>
@@ -168,8 +206,12 @@ const MainTable = () => {
                 <Button className='mx-3 my-2' variant="dark" type="button" onClick={calculatePriceGB}>Calculate Price GB</Button>
                 <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleCalculateIndexValues}>Calculate Index Value</Button>
                 <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleCalculateIndexValuesGB}>Calculate Index Value GB</Button>
-                <input type="date" value={conversionDate} onChange={handleDateChange} />
+                <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleSaveData}>Save Data</Button>
+                <label htmlFor="fileInput" className="btn btn-dark">Choose File</label>
+                <input id="fileInput" type="file" style={{ display: 'none' }} onChange={handleFileChange} />
+                <span>choose exchange date: </span><input type="date" value={conversionDate} onChange={handleDateChange} />
                 <p>{exchangeRateDisplay}</p>
+    
             </form>
             <div>
                 <div>
@@ -188,18 +230,18 @@ const MainTable = () => {
                                 if (group && quantity > 0) {
                                     return <li key={group}>CN Group {group}: Quantity {quantity}</li>;
                                 }
-                                return null; // Skip rendering empty groups
+                                return null;
                             })}
                         </ul>
                     </div>
                     <div>
                         <h4>CN Groups Value Summary</h4>
                         <ul>
-                            {Object.entries(cnGroups).map(([group, { indexValue }]) => {
-                                if (group && indexValue > 0) {
-                                    return <li key={group}>CN Group {group}: Value {indexValue.toFixed(2)}</li>;
+                            {Object.entries(cnGroups).map(([group, { indexValue, indexValueGB }]) => {
+                                if (group && (indexValue > 0 || indexValueGB > 0)) {
+                                    return <li key={group}>CN Group {group}: Value {indexValue.toFixed(2)} Value GB: {indexValueGB.toFixed(2)}</li>;
                                 }
-                                return null; // Skip rendering empty groups
+                                return null;
                             })}
                         </ul>
                     </div>

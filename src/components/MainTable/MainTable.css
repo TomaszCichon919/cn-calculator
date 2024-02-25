@@ -10,3 +10,15 @@ input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none; 
   appearance: none; 
 }
+
+.btn-dark {
+  background-color: #343a40;
+  color: #fff;
+  border-color: #343a40;
+}
+
+.btn-dark:hover {
+  background-color: #23272b;
+  color: #fff;
+  border-color: #1d2124;
+}
