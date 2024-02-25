@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Container } from 'react-bootstrap';
+import { Table, Button, Container, Dropdown } from 'react-bootstrap';
 import './MainTable.css';
 
 const MainTable = () => {
@@ -17,10 +17,14 @@ const MainTable = () => {
         }));
     });
     const [cnGroups, setCnGroups] = useState({});
-    const [priceSummary, setPriceSummary] = useState({});
+    const [language, setLanguage] = useState('en'); // Default language is English
     const [exchangeRate, setExchangeRate] = useState(0);
     const [conversionDate, setConversionDate] = useState('');
     const [exchangeRateDisplay, setExchangeRateDisplay] = useState('');
+
+    const handleLanguageChange = (selectedLanguage) => {
+        setLanguage(selectedLanguage);
+    };
 
     useEffect(() => {
         if (conversionDate) {
@@ -172,81 +176,180 @@ const MainTable = () => {
 
     return (
         <Container>
-            <form onSubmit={handleSubmit}>
-                <Table striped bordered hover>
-                    <thead>
-                        <tr>
-                            <th>Nr.</th>
-                            <th>Index Name</th>
-                            <th>Quantity</th>
-                            <th>Price</th>
-                            <th>Index Value</th>
-                            <th>Price GB</th>
-                            <th>Index Value GB</th>
-                            <th>CN Code</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.map((row, index) => (
-                            <tr key={row.id}>
-                                <td>{index + 1}</td>
-                                <td><input type="text" value={row.indexName} onChange={(e) => handleInputChange(e, index, 'indexName')} /></td>
-                                <td><input type="number" value={row.quantity} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
-                                <td><input type="number" value={row.price} onChange={(e) => handleInputChange(e, index, 'price')} /></td>
-                                <td>{typeof row.indexValue === 'number' ? row.indexValue.toFixed(2) : 'N/A'}</td>
-                                <td>{typeof row.priceGB === 'number' ? row.priceGB.toFixed(2) : 'N/A'}</td>
-                                <td>{typeof row.indexValueGB === 'number' ? row.indexValueGB.toFixed(2) : 'N/A'}</td>
-                                <td><input type="number" value={row.cnCode} onChange={(e) => handleInputChange(e, index, 'cnCode')} /></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-                <Button className='mx-3 my-2' variant="dark" type="button" onClick={addRow}>Add Row</Button>
-                <Button className='mx-3 my-2' variant="dark" type="submit">Submit</Button>
-                <Button className='mx-3 my-2' variant="dark" type="button" onClick={calculatePriceGB}>Calculate Price GB</Button>
-                <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleCalculateIndexValues}>Calculate Index Value</Button>
-                <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleCalculateIndexValuesGB}>Calculate Index Value GB</Button>
-                <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleSaveData}>Save Data</Button>
-                <label htmlFor="fileInput" className="btn btn-dark">Choose File</label>
-                <input id="fileInput" type="file" style={{ display: 'none' }} onChange={handleFileChange} />
-                <span>choose exchange date: </span><input type="date" value={conversionDate} onChange={handleDateChange} />
-                <p>{exchangeRateDisplay}</p>
-    
-            </form>
-            <div>
-                <div>
-                    <h4>Total Summary</h4>
-                    <p>Total Price: {totalPrice.toFixed(2)}</p>
-                    <p>Total Price GB: {totalPriceGB.toFixed(2)}</p>
-                    <p>Total Quantity: {totalQuantity}</p>
-                </div>
-            </div>
-            <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Dropdown onSelect={handleLanguageChange} className='m-5'>
+                <Dropdown.Toggle variant="dark" id="language-dropdown">
+                {language === 'en' ? 'Select Language' : 'Wybierz język'}
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                    <Dropdown.Item eventKey="en">EN</Dropdown.Item>
+                    <Dropdown.Item eventKey="pl">PL</Dropdown.Item>
+                    {/* Add more language options */}
+                </Dropdown.Menu>
+            </Dropdown>
+            {language === 'en' && (
+                <>
+
+                    <form onSubmit={handleSubmit}>
+                        <Table striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Nr.</th>
+                                    <th>Index Name</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Index Value</th>
+                                    <th>Price GB</th>
+                                    <th>Index Value GB</th>
+                                    <th>CN Code</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rows.map((row, index) => (
+                                    <tr key={row.id}>
+                                        <td>{index + 1}</td>
+                                        <td><input type="text" value={row.indexName} onChange={(e) => handleInputChange(e, index, 'indexName')} /></td>
+                                        <td><input type="number" value={row.quantity} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
+                                        <td><input type="number" value={row.price} onChange={(e) => handleInputChange(e, index, 'price')} /></td>
+                                        <td>{typeof row.indexValue === 'number' ? row.indexValue.toFixed(2) : 'N/A'}</td>
+                                        <td>{typeof row.priceGB === 'number' ? row.priceGB.toFixed(2) : 'N/A'}</td>
+                                        <td>{typeof row.indexValueGB === 'number' ? row.indexValueGB.toFixed(2) : 'N/A'}</td>
+                                        <td><input type="number" value={row.cnCode} onChange={(e) => handleInputChange(e, index, 'cnCode')} /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={addRow}>Add Row</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="submit">Submit</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={calculatePriceGB}>Calculate Price GB</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleCalculateIndexValues}>Calculate Index Value</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleCalculateIndexValuesGB}>Calculate Index Value GB</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleSaveData}>Save Data</Button>
+                        <label htmlFor="fileInput" className="btn btn-dark">Choose File</label>
+                        <input id="fileInput" type="file" style={{ display: 'none' }} onChange={handleFileChange} />
+                        <div>
+                            <span>choose exchange date: </span><input type="date" value={conversionDate} onChange={handleDateChange} />
+                            <p>{exchangeRateDisplay}</p>
+                        </div>
+
+                    </form>
                     <div>
-                        <h4>CN Groups Quantity</h4>
-                        <ul>
-                            {Object.entries(cnGroups).map(([group, { quantity }]) => {
-                                if (group && quantity > 0) {
-                                    return <li key={group}>CN Group {group}: Quantity {quantity}</li>;
-                                }
-                                return null;
-                            })}
-                        </ul>
+                        <div>
+                            <h4>Total Summary</h4>
+                            <p>Total Price: {totalPrice.toFixed(2)}</p>
+                            <p>Total Price GB: {totalPriceGB.toFixed(2)}</p>
+                            <p>Total Quantity: {totalQuantity}</p>
+                        </div>
                     </div>
                     <div>
-                        <h4>CN Groups Value Summary</h4>
-                        <ul>
-                            {Object.entries(cnGroups).map(([group, { indexValue, indexValueGB }]) => {
-                                if (group && (indexValue > 0 || indexValueGB > 0)) {
-                                    return <li key={group}>CN Group {group}: Value {indexValue.toFixed(2)} Value GB: {indexValueGB.toFixed(2)}</li>;
-                                }
-                                return null;
-                            })}
-                        </ul>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <div>
+                                <h4>CN Groups Quantity</h4>
+                                <ul>
+                                    {Object.entries(cnGroups).map(([group, { quantity }]) => {
+                                        if (group && quantity > 0) {
+                                            return <li key={group}>CN Group {group}: Quantity {quantity}</li>;
+                                        }
+                                        return null;
+                                    })}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4>CN Groups Value Summary</h4>
+                                <ul>
+                                    {Object.entries(cnGroups).map(([group, { indexValue, indexValueGB }]) => {
+                                        if (group && (indexValue > 0 || indexValueGB > 0)) {
+                                            return <li key={group}>CN Group {group}: Value {indexValue.toFixed(2)} Value GB: {indexValueGB.toFixed(2)}</li>;
+                                        }
+                                        return null;
+                                    })}
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </>
+            )}
+            {language === 'pl' && (
+
+                <>
+                    <form onSubmit={handleSubmit}>
+                        <Table striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Lp.</th>
+                                    <th>Nazwa indeksu</th>
+                                    <th>Ilość</th>
+                                    <th>Cena</th>
+                                    <th>Wartość pozycji</th>
+                                    <th>Cena GB</th>
+                                    <th>Wartość pozycji GB</th>
+                                    <th>Kod CN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rows.map((row, index) => (
+                                    <tr key={row.id}>
+                                        <td>{index + 1}</td>
+                                        <td><input type="text" value={row.indexName} onChange={(e) => handleInputChange(e, index, 'indexName')} /></td>
+                                        <td><input type="number" value={row.quantity} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
+                                        <td><input type="number" value={row.price} onChange={(e) => handleInputChange(e, index, 'price')} /></td>
+                                        <td>{typeof row.indexValue === 'number' ? row.indexValue.toFixed(2) : 'N/A'}</td>
+                                        <td>{typeof row.priceGB === 'number' ? row.priceGB.toFixed(2) : 'N/A'}</td>
+                                        <td>{typeof row.indexValueGB === 'number' ? row.indexValueGB.toFixed(2) : 'N/A'}</td>
+                                        <td><input type="number" value={row.cnCode} onChange={(e) => handleInputChange(e, index, 'cnCode')} /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={addRow}>Powiększ tabelę</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="submit">Grupuj CN</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={calculatePriceGB}>Przelicz ceny GB</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleCalculateIndexValues}>Przelicz wortość pozycji</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleCalculateIndexValuesGB}>Przelicz wartość pozycji GB</Button>
+                        <Button className='mx-3 my-2' variant="dark" type="button" onClick={handleSaveData}>Zapisz dane</Button>
+                        <label htmlFor="fileInput" className="btn btn-dark">Załaduj plik</label>
+                        <input id="fileInput" type="file" style={{ display: 'none' }} onChange={handleFileChange} />
+                        <div>
+                            <span>wybierz datę do pobrania kursu: </span><input type="date" value={conversionDate} onChange={handleDateChange} />
+                            <p>{exchangeRateDisplay}</p>
+                        </div>
+
+                    </form>
+                    <div>
+                        <div>
+                            <h4>Podsumowanie</h4>
+                            <p>Wartość PLN: {totalPrice.toFixed(2)}</p>
+                            <p>Wartość GB: {totalPriceGB.toFixed(2)}</p>
+                            <p>Wartość całkowita: {totalQuantity}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <div>
+                                <h4>Podsumowanie ilości grupy  kodów CN</h4>
+                                <ul>
+                                    {Object.entries(cnGroups).map(([group, { quantity }]) => {
+                                        if (group && quantity > 0) {
+                                            return <li key={group}>Grupa CN {group}: Ilość {quantity}</li>;
+                                        }
+                                        return null;
+                                    })}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4>Podsumowanie wartości grupy kodów CN</h4>
+                                <ul>
+                                    {Object.entries(cnGroups).map(([group, { indexValue, indexValueGB }]) => {
+                                        if (group && (indexValue > 0 || indexValueGB > 0)) {
+                                            return <li key={group}>Grupa CN {group}: Wartość {indexValue.toFixed(2)} Wartość GB: {indexValueGB.toFixed(2)}</li>;
+                                        }
+                                        return null;
+                                    })}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
         </Container>
     );
 };
