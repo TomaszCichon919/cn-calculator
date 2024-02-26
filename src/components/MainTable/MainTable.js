@@ -39,16 +39,14 @@ const MainTable = () => {
     const handleInputChange = (e, rowIndex, field) => {
         const { value } = e.target;
         const parsedValue = field !== 'indexName' ? parseFloat(value) : value; // Parse the input value to a float number if it's not the 'indexName' field
-        setRows(prevRows =>
-            prevRows.map((row, index) =>
-                index === rowIndex ? { ...row, [field]: parsedValue } : row
-            )
-        );
+        const updatedRows = [...rows];
+        updatedRows[rowIndex] = { ...updatedRows[rowIndex], [field]: field === 'cnCode' ? value : parsedValue }; // Treat 'cnCode' field as a string
+        setRows(updatedRows);
     };
 
     const fetchExchangeRate = async () => {
         try {
-            const response = await fetch(`https://cors-anywhere.herokuapp.com/http://api.nbp.pl/api/exchangerates/rates/a/gbp/${conversionDate}`);
+            const response = await fetch(`http://api.nbp.pl/api/exchangerates/rates/a/gbp/${conversionDate}`);
             const data = await response.json();
             if (data && data.rates && data.rates.length > 0) {
                 const rate = data.rates[0].mid;
@@ -137,9 +135,9 @@ const MainTable = () => {
         calculateIndexValuesGB();
     };
 
-    const totalPrice = rows.reduce((total, row) => total + parseFloat(row.price || 0), 0);
-    const totalPriceGB = rows.reduce((total, row) => total + parseFloat(row.priceGB || 0), 0);
-    const totalQuantity = rows.reduce((total, row) => total + (parseInt(row.quantity, 10) || 0), 0);
+    const totalPrice = rows.reduce((total, row) => total + parseFloat(row.indexValue || 0), 0);
+    const totalPriceGB = rows.reduce((total, row) => total + parseFloat(row.indexValueGB || 0), 0);
+    const totalQuantity = rows.reduce((total, row) => total + parseFloat(row.quantity || 0), 0);
 
     const handleSaveData = () => {
         const dataToSave = {
@@ -295,7 +293,7 @@ const MainTable = () => {
                                         <td>{typeof row.indexValue === 'number' ? row.indexValue.toFixed(2) : 'N/A'}</td>
                                         <td>{typeof row.priceGB === 'number' ? row.priceGB.toFixed(2) : 'N/A'}</td>
                                         <td>{typeof row.indexValueGB === 'number' ? row.indexValueGB.toFixed(2) : 'N/A'}</td>
-                                        <td><input type="number" value={row.cnCode} onChange={(e) => handleInputChange(e, index, 'cnCode')} /></td>
+                                        <td><input type="text" value={row.cnCode} onChange={(e) => handleInputChange(e, index, 'cnCode')} /></td>
                                     </tr>
                                 ))}
                             </tbody>
